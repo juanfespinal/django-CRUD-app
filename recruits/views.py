@@ -3,6 +3,7 @@ from django.http import JsonResponse, HttpResponse
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Count, Q, Avg
+from django.db.models.functions import TruncDate, TruncMonth
 from django.utils import timezone
 from datetime import timedelta, date
 from .models import Candidate, Position, Interview, Department
@@ -71,20 +72,34 @@ def analytics(request):
 
     # Applications over time (last 30 days)
     thirty_days_ago = timezone.now() - timedelta(days=30)
-    applications_by_day = Candidate.objects.filter(
+    applications_by_day_qs = Candidate.objects.filter(
         applied_date__gte=thirty_days_ago
-    ).extra(
-        select={'day': "date(applied_date)"}
+    ).annotate(
+        day=TruncDate('applied_date')
     ).values('day').annotate(count=Count('id')).order_by('day')
+    applications_by_day = [
+        {
+            'day': row['day'].isoformat() if row['day'] else None,
+            'count': row['count'],
+        }
+        for row in applications_by_day_qs
+    ]
 
     # Hire rate by month (last 6 months)
     six_months_ago = timezone.now() - timedelta(days=180)
-    monthly_hires = Candidate.objects.filter(
+    monthly_hires_qs = Candidate.objects.filter(
         status='hired',
         hired_date__gte=six_months_ago
-    ).extra(
-        select={'month': "strftime('%%Y-%%m', hired_date)"}
+    ).annotate(
+        month=TruncMonth('hired_date')
     ).values('month').annotate(count=Count('id')).order_by('month')
+    monthly_hires = [
+        {
+            'month': row['month'].strftime('%Y-%m') if row['month'] else None,
+            'count': row['count'],
+        }
+        for row in monthly_hires_qs
+    ]
 
     # Positions by department
     positions_by_dept = Position.objects.values('department__name').annotate(
