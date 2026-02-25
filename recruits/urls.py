@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     # Landing Page (public)
+    path('', views.landing_page, name='home'),
     path('landing/', views.landing_page, name='landing_page'),
     
     # Dashboard
