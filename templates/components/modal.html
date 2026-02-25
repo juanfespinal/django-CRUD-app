@@ -1,0 +1,17 @@
+{% load static %}
+<div class="modal-backdrop" id="{{ id }}">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title">{{ title }}</h3>
+            <button class="modal-close" onclick="closeModal(document.getElementById('{{ id }}'))">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            {{ content|safe }}
+        </div>
+    </div>
+</div>

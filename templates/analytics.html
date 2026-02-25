@@ -1,0 +1,469 @@
+{% extends 'base.html' %}
+
+{% block title %}Analytics - CleanRecruit{% endblock %}
+
+{% block page_title %}Analytics{% endblock %}
+
+{% block content %}
+<!-- Stats Grid -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(99, 102, 241, 0.1); color: var(--primary);">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                </path>
+            </svg>
+        </div>
+        <div class="stat-content">
+            <div class="stat-label">Total Candidates</div>
+            <div class="stat-value">{{ total_candidates }}</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(14, 165, 233, 0.1); color: var(--secondary);">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
+                </path>
+            </svg>
+        </div>
+        <div class="stat-content">
+            <div class="stat-label">Total Positions</div>
+            <div class="stat-value">{{ total_positions }}</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--success);">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+        </div>
+        <div class="stat-content">
+            <div class="stat-label">Hired Candidates</div>
+            <div class="stat-value" style="color: var(--success);">{{ hired_candidates }}</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(168, 85, 247, 0.1); color: #a855f7;">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+        </div>
+        <div class="stat-content">
+            <div class="stat-label">Total Interviews</div>
+            <div class="stat-value">{{ total_interviews }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Grid -->
+<div class="charts-grid">
+    <!-- Candidates by Status -->
+    <div class="chart-card">
+        <h3 class="chart-title">Candidates by Status</h3>
+        <div class="chart-container">
+            <canvas id="statusChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Positions by Department -->
+    <div class="chart-card">
+        <h3 class="chart-title">Positions by Department</h3>
+        <div class="chart-container">
+            <canvas id="deptChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Applications Over Time -->
+    <div class="chart-card">
+        <h3 class="chart-title">Applications Over Time (Last 30 Days)</h3>
+        <div class="chart-container">
+            <canvas id="applicationsChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Monthly Hires -->
+    <div class="chart-card">
+        <h3 class="chart-title">Monthly Hires (Last 6 Months)</h3>
+        <div class="chart-container">
+            <canvas id="hiresChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Recruitment Efficiency -->
+<div class="card" style="margin-bottom: 32px;">
+    <div class="card-header">
+        <h3 class="card-title">Recruitment Efficiency</h3>
+    </div>
+    <div class="card-body">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px;">
+            <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(99, 102, 241, 0.05)); border-radius: var(--radius-lg); border: 1px solid rgba(99, 102, 241, 0.2);">
+                <div style="font-size: 2.5rem; font-weight: 700; color: var(--primary);">
+                    {% if avg_time_to_hire %}{{ avg_time_to_hire }}{% else %}-{% endif %}
+                </div>
+                <div style="color: var(--text-secondary); font-size: 0.875rem;">Avg Days to Hire</div>
+            </div>
+
+            <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(14, 165, 233, 0.05)); border-radius: var(--radius-lg); border: 1px solid rgba(14, 165, 233, 0.2);">
+                <div style="font-size: 2.5rem; font-weight: 700; color: var(--secondary);">
+                    {% if avg_time_to_screen %}{{ avg_time_to_screen }}{% else %}-{% endif %}
+                </div>
+                <div style="color: var(--text-secondary); font-size: 0.875rem;">Avg Days to Screen</div>
+            </div>
+
+            <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(168, 85, 247, 0.05)); border-radius: var(--radius-lg); border: 1px solid rgba(168, 85, 247, 0.2);">
+                <div style="font-size: 2.5rem; font-weight: 700; color: #a855f7;">
+                    {% if avg_time_to_interview %}{{ avg_time_to_interview }}{% else %}-{% endif %}
+                </div>
+                <div style="color: var(--text-secondary); font-size: 0.875rem;">Avg Days to Interview</div>
+            </div>
+
+            <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05)); border-radius: var(--radius-lg); border: 1px solid rgba(16, 185, 129, 0.2);">
+                <div style="font-size: 2.5rem; font-weight: 700; color: var(--success);">
+                    {% if avg_time_to_offer %}{{ avg_time_to_offer }}{% else %}-{% endif %}
+                </div>
+                <div style="color: var(--text-secondary); font-size: 0.875rem;">Avg Days to Offer</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pipeline Funnel & Velocity -->
+<div class="charts-grid">
+    <!-- Pipeline Funnel -->
+    <div class="chart-card">
+        <h3 class="chart-title">Recruitment Pipeline Funnel</h3>
+        <div class="chart-container">
+            <canvas id="funnelChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Conversion Rates -->
+    <div class="chart-card">
+        <h3 class="chart-title">Pipeline Conversion Rates</h3>
+        <div style="display: flex; flex-direction: column; gap: 16px; padding: 10px 0;">
+            <div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                    <span style="font-size: 0.875rem; color: var(--text-secondary);">Screened</span>
+                    <span style="font-size: 0.875rem; font-weight: 600;">{{ screen_rate }}%</span>
+                </div>
+                <div style="height: 8px; background: var(--background); border-radius: 4px; overflow: hidden;">
+                    <div style="height: 100%; width: {{ screen_rate }}%; background: #0ea5e9; border-radius: 4px;"></div>
+                </div>
+            </div>
+            <div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                    <span style="font-size: 0.875rem; color: var(--text-secondary);">Interviewed</span>
+                    <span style="font-size: 0.875rem; font-weight: 600;">{{ interview_rate }}%</span>
+                </div>
+                <div style="height: 8px; background: var(--background); border-radius: 4px; overflow: hidden;">
+                    <div style="height: 100%; width: {{ interview_rate }}%; background: #a855f7; border-radius: 4px;"></div>
+                </div>
+            </div>
+            <div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                    <span style="font-size: 0.875rem; color: var(--text-secondary);">Offered</span>
+                    <span style="font-size: 0.875rem; font-weight: 600;">{{ offer_rate }}%</span>
+                </div>
+                <div style="height: 8px; background: var(--background); border-radius: 4px; overflow: hidden;">
+                    <div style="height: 100%; width: {{ offer_rate }}%; background: #f59e0b; border-radius: 4px;"></div>
+                </div>
+            </div>
+            <div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                    <span style="font-size: 0.875rem; color: var(--text-secondary);">Hired</span>
+                    <span style="font-size: 0.875rem; font-weight: 600;">{{ hire_rate }}%</span>
+                </div>
+                <div style="height: 8px; background: var(--background); border-radius: 4px; overflow: hidden;">
+                    <div style="height: 100%; width: {{ hire_rate }}%; background: #10b981; border-radius: 4px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Weekly Pipeline Velocity -->
+<div class="card" style="margin-bottom: 32px;">
+    <div class="card-header">
+        <h3 class="card-title">Pipeline Velocity (Last 7 Days)</h3>
+    </div>
+    <div class="card-body">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px;">
+            <div style="text-align: center; padding: 16px; background: var(--background); border-radius: var(--radius-lg);">
+                <div style="font-size: 2rem; font-weight: 700; color: #0ea5e9;">{{ weekly_screened }}</div>
+                <div style="color: var(--text-secondary); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Screened</div>
+            </div>
+            <div style="text-align: center; padding: 16px; background: var(--background); border-radius: var(--radius-lg);">
+                <div style="font-size: 2rem; font-weight: 700; color: #a855f7;">{{ weekly_interviewed }}</div>
+                <div style="color: var(--text-secondary); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Interviewed</div>
+            </div>
+            <div style="text-align: center; padding: 16px; background: var(--background); border-radius: var(--radius-lg);">
+                <div style="font-size: 2rem; font-weight: 700; color: #f59e0b;">{{ weekly_offered }}</div>
+                <div style="color: var(--text-secondary); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Offered</div>
+            </div>
+            <div style="text-align: center; padding: 16px; background: var(--background); border-radius: var(--radius-lg);">
+                <div style="font-size: 2rem; font-weight: 700; color: #10b981;">{{ weekly_hired }}</div>
+                <div style="color: var(--text-secondary); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Hired</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Performance Metrics -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Performance Metrics</h3>
+    </div>
+    <div class="card-body">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px;">
+            <div
+                style="text-align: center; padding: 20px; background: var(--background); border-radius: var(--radius-lg);">
+                <div style="font-size: 2.5rem; font-weight: 700; color: var(--primary);">
+                    {% if total_candidates > 0 %}
+                    {{ hired_candidates|floatformat:0 }}
+                    {% else %}0{% endif %}
+                </div>
+                <div style="color: var(--text-secondary); font-size: 0.875rem;">Hires</div>
+            </div>
+
+            <div
+                style="text-align: center; padding: 20px; background: var(--background); border-radius: var(--radius-lg);">
+                <div style="font-size: 2.5rem; font-weight: 700; color: var(--secondary);">
+                    {{ open_positions }}
+                </div>
+                <div style="color: var(--text-secondary); font-size: 0.875rem;">Open Positions</div>
+            </div>
+
+            <div
+                style="text-align: center; padding: 20px; background: var(--background); border-radius: var(--radius-lg);">
+                <div style="font-size: 2.5rem; font-weight: 700; color: var(--success);">
+                    {{ interview_show_rate|floatformat:0 }}%
+                </div>
+                <div style="color: var(--text-secondary); font-size: 0.875rem;">Interview Show Rate</div>
+            </div>
+
+            <div
+                style="text-align: center; padding: 20px; background: var(--background); border-radius: var(--radius-lg);">
+                <div style="font-size: 2.5rem; font-weight: 700; color: var(--warning);">
+                    {{ avg_rating|floatformat:1 }}
+                </div>
+                <div style="color: var(--text-secondary); font-size: 0.875rem;">Avg Interview Rating</div>
+            </div>
+
+            <div
+                style="text-align: center; padding: 20px; background: var(--background); border-radius: var(--radius-lg);">
+                <div style="font-size: 2.5rem; font-weight: 700; color: var(--primary);">
+                    {{ completed_interviews }}
+                </div>
+                <div style="color: var(--text-secondary); font-size: 0.875rem;">Completed Interviews</div>
+            </div>
+
+            <div
+                style="text-align: center; padding: 20px; background: var(--background); border-radius: var(--radius-lg);">
+                <div style="font-size: 2.5rem; font-weight: 700; color: var(--error);">
+                    {% if total_candidates > 0 %}
+                    {{ total_candidates|add:"-hired_candidates"|floatformat:0 }}
+                    {% else %}0{% endif %}
+                </div>
+                <div style="color: var(--text-secondary); font-size: 0.875rem;">Not Hired</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Status Chart
+        const statusData = {{ status_data|safe }};
+        const statusCtx = document.getElementById('statusChart').getContext('2d');
+
+    const statusColors = {
+        'new': '#6366f1',
+        'screening': '#0ea5e9',
+        'interview': '#a855f7',
+        'offer': '#10b981',
+        'hired': '#059669',
+        'rejected': '#f43f5e'
+    };
+
+    new Chart(statusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: statusData.map(s => s.status.charAt(0).toUpperCase() + s.status.slice(1)),
+            datasets: [{
+                data: statusData.map(s => s.count),
+                backgroundColor: statusData.map(s => statusColors[s.status] || '#64748B'),
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
+                }
+            },
+            cutout: '65%'
+        }
+    });
+
+        // Department Chart
+        const deptData = {{ positions_by_dept|safe }};
+        const deptCtx = document.getElementById('deptChart').getContext('2d');
+
+    const deptColors = ['#0F766E', '#14B8A6', '#6366F1', '#8B5CF6', '#F59E0B', '#EF4444'];
+
+    new Chart(deptCtx, {
+        type: 'bar',
+        data: {
+            labels: deptData.map(d => d.department__name || 'Unassigned'),
+            datasets: [{
+                label: 'Positions',
+                data: deptData.map(d => d.count),
+                backgroundColor: deptColors.slice(0, deptData.length),
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+
+        // Applications Over Time Chart
+        const appsData = {{ applications_by_day|safe }};
+        const appsCtx = document.getElementById('applicationsChart').getContext('2d');
+
+    new Chart(appsCtx, {
+        type: 'line',
+        data: {
+            labels: appsData.map(d => d.day),
+            datasets: [{
+                label: 'Applications',
+                data: appsData.map(d => d.count),
+                borderColor: '#0F766E',
+                backgroundColor: 'rgba(15, 118, 110, 0.1)',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+
+        // Monthly Hires Chart
+        const hiresData = {{ monthly_hires|safe }};
+        const hiresCtx = document.getElementById('hiresChart').getContext('2d');
+
+    new Chart(hiresCtx, {
+        type: 'bar',
+        data: {
+            labels: hiresData.map(h => h.month || 'N/A'),
+            datasets: [{
+                label: 'Hires',
+                data: hiresData.map(h => h.count),
+                backgroundColor: '#10B981',
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+
+        // Pipeline Funnel Chart
+        const stageData = {{ stage_data|safe }};
+        const funnelCtx = document.getElementById('funnelChart').getContext('2d');
+
+        const funnelColors = ['#6366f1', '#0ea5e9', '#a855f7', '#f59e0b', '#10b981'];
+
+        new Chart(funnelCtx, {
+            type: 'bar',
+            data: {
+                labels: stageData.map(s => s.stage),
+                datasets: [{
+                    label: 'Candidates',
+                    data: stageData.map(s => s.count),
+                    backgroundColor: funnelColors,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

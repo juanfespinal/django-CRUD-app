@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - CleanRecruit{% endblock %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- Stats Grid -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(99, 102, 241, 0.1); color: var(--primary);">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                </path>
+            </svg>
+        </div>
+        <div class="stat-content">
+            <div class="stat-label">Total Candidates</div>
+            <div class="stat-value">{{ total_candidates }}</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(14, 165, 233, 0.1); color: var(--secondary);">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
+                </path>
+            </svg>
+        </div>
+        <div class="stat-content">
+            <div class="stat-label">Active Positions</div>
+            <div class="stat-value">{{ active_positions }}</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(168, 85, 247, 0.1); color: #a855f7;">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+        </div>
+        <div class="stat-content">
+            <div class="stat-label">Interviews This Week</div>
+            <div class="stat-value">{{ interviews_this_week }}</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--success);">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+        </div>
+        <div class="stat-content">
+            <div class="stat-label">Hire Rate</div>
+            <div class="stat-value" style="color: var(--success);">{{ hire_rate }}%</div>
+        </div>
+    </div>
+</div>
+
+<div class="charts-grid">
+    <!-- Candidates by Status Chart -->
+    <div class="chart-card">
+        <h3 class="chart-title">Candidates by Status</h3>
+        <div class="chart-container">
+            <canvas id="statusChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Recent Candidates -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Recent Candidates</h3>
+            <a href="{% url 'candidate_list' %}" class="btn btn-secondary btn-sm">View All</a>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            {% if recent_candidates %}
+            <div class="activity-feed">
+                {% for candidate in recent_candidates %}
+                <div class="activity-item" style="padding: 16px 24px;">
+                    <div class="activity-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-title">{{ candidate.full_name }}</div>
+                        <div class="flex items-center gap-2">
+                            <span class="badge badge-{{ candidate.status }}">{{ candidate.get_status_display }}</span>
+                            <span class="activity-time">{{ candidate.position.title|default:"No position" }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <svg class="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                    </path>
+                </svg>
+                <h4 class="empty-state-title">No candidates yet</h4>
+                <p class="empty-state-text">Start by adding your first candidate</p>
+                <a href="{% url 'candidate_create' %}" class="btn btn-primary">Add Candidate</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Recent Interviews -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Upcoming Interviews</h3>
+        <a href="{% url 'interview_list' %}" class="btn btn-secondary btn-sm">View All</a>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        {% if recent_interviews %}
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Candidate</th>
+                        <th>Interviewer</th>
+                        <th>Date & Time</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for interview in recent_interviews %}
+                    <tr>
+                        <td>{{ interview.candidate.full_name }}</td>
+                        <td>{{ interview.interviewer_name }}</td>
+                        <td>{{ interview.scheduled_date|date:"M j, Y" }} at {{ interview.scheduled_time|time:"g:i A" }}
+                        </td>
+                        <td><span class="badge badge-{{ interview.interview_type }}">{{
+                                interview.get_interview_type_display }}</span></td>
+                        <td><span class="badge badge-{{ interview.status }}">{{ interview.get_status_display }}</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <svg class="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+            <h4 class="empty-state-title">No interviews scheduled</h4>
+            <p class="empty-state-text">Schedule your first interview</p>
+            <a href="{% url 'interview_create' %}" class="btn btn-primary">Schedule Interview</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Candidates by Status Chart
+        const statusData = {{ candidates_by_status| safe
+    }};
+    const statusCtx = document.getElementById('statusChart').getContext('2d');
+
+    const statusColors = {
+        'new': '#6366f1',      // Indigo
+        'screening': '#0ea5e9', // Cyan
+        'interview': '#a855f7', // Purple/Violet
+        'offer': '#10b981',     // Emerald/Success
+        'hired': '#059669',     // Green
+        'rejected': '#f43f5e'   // Rose/Error
+    };
+
+    new Chart(statusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: statusData.map(s => s.status.charAt(0).toUpperCase() + s.status.slice(1)),
+            datasets: [{
+                data: statusData.map(s => s.count),
+                backgroundColor: statusData.map(s => statusColors[s.status] || '#64748B'),
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
+                }
+            },
+            cutout: '65%'
+        }
+    });
+});
+</script>
+{% endblock %}

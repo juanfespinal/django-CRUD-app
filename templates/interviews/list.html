@@ -1,0 +1,341 @@
+{% extends 'base.html' %}
+
+{% block title %}Interviews - CleanRecruit{% endblock %}
+
+{% block page_title %}Interviews{% endblock %}
+
+{% block content %}
+<div class="card">
+    <!-- Filters -->
+    <form method="get" class="filters">
+        <div class="search-box">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            <input type="text" name="search" class="form-input" placeholder="Search interviews..." value="{{ search }}">
+        </div>
+
+        <select name="status" class="form-select filter-select">
+            <option value="">All Statuses</option>
+            {% for value, label in statuses %}
+            <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+
+        <select name="type" class="form-select filter-select">
+            <option value="">All Types</option>
+            {% for value, label in types %}
+            <option value="{{ value }}" {% if type_filter == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+
+        <div class="flex gap-2">
+            <input type="date" name="date_from" class="form-input" value="{{ date_from }}" placeholder="From">
+            <input type="date" name="date_to" class="form-input" value="{{ date_to }}" placeholder="To">
+        </div>
+
+        <button type="button" class="btn btn-primary" data-modal="interview-modal"
+            onclick="openModal('interview-modal')">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Schedule Interview
+        </button>
+    </form>
+
+    <!-- Table -->
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Candidate</th>
+                    <th>Interviewer</th>
+                    <th>Date & Time</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Rating</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for interview in page_obj %}
+                <tr data-id="{{ interview.id }}" data-candidate="{{ interview.candidate.id }}" data-interviewer="{{ interview.interviewer_name|escapejs }}" data-interviewer-email="{{ interview.interviewer_email }}" data-date="{{ interview.scheduled_date|date:'Y-m-d' }}" data-time="{{ interview.scheduled_time|time:'H:i' }}" data-type="{{ interview.interview_type }}" data-status="{{ interview.status }}" data-rating="{{ interview.rating|default:'' }}" data-notes="{{ interview.notes|escapejs }}">
+                    <td>
+                        <div class="flex items-center gap-2">
+                            <div
+                                style="width: 32px; height: 32px; border-radius: 50%; background: var(--secondary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 12px;">
+                                {{ interview.candidate.first_name.0 }}{{ interview.candidate.last_name.0 }}
+                            </div>
+                            <span class="font-medium">{{ interview.candidate.full_name }}</span>
+                        </div>
+                    </td>
+                    <td>{{ interview.interviewer_name }}</td>
+                    <td>{{ interview.scheduled_date|date:"M j, Y" }} at {{ interview.scheduled_time|time:"g:i A" }}</td>
+                    <td>
+                        <span class="badge badge-{{ interview.interview_type }}">
+                            {{ interview.get_interview_type_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge badge-{{ interview.status }}">
+                            {{ interview.get_status_display }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if interview.rating %}
+                        <div class="flex items-center gap-1">
+                            {% for i in "12345" %}
+                            {% if forloop.counter <= interview.rating %} <svg fill="currentColor" viewBox="0 0 20 20"
+                                width="16" height="16" style="color: var(--warning);">
+                                <path
+                                    d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z">
+                                </path>
+                                </svg>
+                                {% else %}
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"
+                                    style="color: var(--border);">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z">
+                                    </path>
+                                </svg>
+                                {% endif %}
+                                {% endfor %}
+                        </div>
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="table-actions">
+                            <button class="btn btn-ghost btn-icon" onclick="editInterview({{ interview.id }})"
+                                title="Edit">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                                    </path>
+                                </svg>
+                            </button>
+                            <button class="btn btn-ghost btn-icon"
+                                onclick="deleteInterview({{ interview.id }}, '{{ interview.candidate.full_name|escapejs }}')"
+                                title="Delete" style="color: var(--error);">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                    </path>
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7">
+                        <div class="empty-state">
+                            <svg class="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                </path>
+                            </svg>
+                            <h4 class="empty-state-title">No interviews found</h4>
+                            <p class="empty-state-text">Try adjusting your search or filters</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="pagination">
+        <div class="pagination-info">
+            Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} interviews
+        </div>
+        <div class="pagination-links">
+            {% if page_obj.has_previous %}
+            <a href="?page=1" class="pagination-link">&laquo;</a>
+            <a href="?page={{ page_obj.previous_page_number }}" class="pagination-link">&lsaquo;</a>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <span class="pagination-link active">{{ num }}</span>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %} <a href="?page={{ num }}"
+                class="pagination-link">{{ num }}</a>
+                {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" class="pagination-link">&rsaquo;</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}" class="pagination-link">&raquo;</a>
+                {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Add/Edit Interview Modal -->
+<div class="modal-backdrop" id="interview-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title" id="interview-modal-title">Schedule Interview</h3>
+            <button class="modal-close" onclick="closeModal(document.getElementById('interview-modal'))">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                </svg>
+            </button>
+        </div>
+        <form method="post" action="{% url 'interview_create' %}" id="interview-form">
+            {% csrf_token %}
+            <div class="modal-body">
+                <input type="hidden" name="id" id="interview-id">
+
+                <div class="form-group">
+                    <label class="form-label">Candidate *</label>
+                    <select name="candidate" id="interview-candidate" class="form-select" required>
+                        <option value="">Select candidate</option>
+                        {% for candidate in candidates %}
+                        <option value="{{ candidate.id }}">{{ candidate.full_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Interviewer Name *</label>
+                        <input type="text" name="interviewer_name" id="interview-interviewer" class="form-input"
+                            required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Interviewer Email</label>
+                        <input type="email" name="interviewer_email" id="interview-email" class="form-input">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Date *</label>
+                        <input type="date" name="scheduled_date" id="interview-date" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Time *</label>
+                        <input type="time" name="scheduled_time" id="interview-time" class="form-input" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Type</label>
+                        <select name="interview_type" id="interview-type" class="form-select">
+                            {% for value, label in types %}
+                            <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Status</label>
+                        <select name="status" id="interview-status" class="form-select">
+                            {% for value, label in statuses %}
+                            <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Rating (1-5)</label>
+                    <select name="rating" id="interview-rating" class="form-select">
+                        <option value="">Not rated</option>
+                        <option value="1">1 - Poor</option>
+                        <option value="2">2 - Fair</option>
+                        <option value="3">3 - Good</option>
+                        <option value="4">4 - Very Good</option>
+                        <option value="5">5 - Excellent</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Notes</label>
+                    <textarea name="notes" id="interview-notes" class="form-textarea" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary"
+                    onclick="closeModal(document.getElementById('interview-modal'))">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Interview</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal-backdrop" id="delete-modal">
+    <div class="modal" style="max-width: 400px;">
+        <div class="modal-header">
+            <h3 class="modal-title">Confirm Delete</h3>
+            <button class="modal-close" onclick="closeModal(document.getElementById('delete-modal'))">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <p>Are you sure you want to delete this interview with <strong id="delete-item-name"></strong>? This action
+                cannot be undone.</p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary"
+                onclick="closeModal(document.getElementById('delete-modal'))">Cancel</button>
+            <form method="post" id="delete-form" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function editInterview(id) {
+        const row = document.querySelector('tr[data-id="' + id + '"]');
+        if (row) {
+            document.getElementById('interview-modal-title').textContent = 'Edit Interview';
+            document.getElementById('interview-id').value = id;
+            document.getElementById('interview-candidate').value = row.dataset.candidate || '';
+            document.getElementById('interview-interviewer').value = row.dataset.interviewer || '';
+            document.getElementById('interview-email').value = row.dataset.interviewerEmail || '';
+            document.getElementById('interview-date').value = row.dataset.date || '';
+            document.getElementById('interview-time').value = row.dataset.time || '';
+            document.getElementById('interview-type').value = row.dataset.type || 'phone';
+            document.getElementById('interview-status').value = row.dataset.status || 'scheduled';
+            document.getElementById('interview-rating').value = row.dataset.rating || '';
+            document.getElementById('interview-notes').value = row.dataset.notes || '';
+            document.getElementById('interview-form').action = '/interviews/' + id + '/edit/';
+            openModal('interview-modal');
+        }
+    }
+
+    function deleteInterview(id, candidateName) {
+        document.getElementById('delete-item-name').textContent = candidateName;
+        document.getElementById('delete-form').action = '/interviews/' + id + '/delete/';
+        openModal('delete-modal');
+    }
+
+    document.getElementById('interview-modal').addEventListener('click', function (e) {
+        if (e.target === this) {
+            closeModal(this);
+        }
+    });
+
+    document.getElementById('interview-modal').addEventListener('closeModal', function () {
+        document.getElementById('interview-modal-title').textContent = 'Schedule Interview';
+        document.getElementById('interview-form').reset();
+        document.getElementById('interview-form').action = '{% url "interview_create" %}';
+    });
+</script>
+{% endblock %}
