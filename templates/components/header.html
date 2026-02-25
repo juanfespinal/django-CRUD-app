@@ -9,6 +9,15 @@
                 </path>
             </svg>
         </button>
+        {% if request.user.is_authenticated %}
+        <div class="text-muted auth-user">
+            Signed in as <strong>{{ request.user.username }}</strong>
+        </div>
+        <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-ghost">Log out</button>
+        </form>
+        {% endif %}
         <div class="text-muted">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -20,9 +29,17 @@
 </header>
 
 <style>
+    .auth-user {
+        white-space: nowrap;
+    }
+
     @media (max-width: 768px) {
         .page-header button[onclick="toggleSidebar()"] {
             display: flex !important;
+        }
+
+        .auth-user {
+            display: none;
         }
     }
 </style>
